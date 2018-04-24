@@ -64,7 +64,7 @@ class _LINE(object):
             _, cur_loss = self.sess.run([self.train_op, self.loss],feed_dict)
             sum_loss += cur_loss
             batch_id += 1
-        print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
+        #print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
 
     def batch_iter(self):
@@ -118,7 +118,7 @@ class _LINE(object):
         power = 0.75
         numNodes = self.node_size
 
-        print("Pre-procesing for non-uniform negative sampling!")
+        #print("Pre-procesing for non-uniform negative sampling!")
         node_degree = np.zeros(numNodes) # out degree
 
         look_up = self.g.look_up_dict
