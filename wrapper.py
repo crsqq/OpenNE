@@ -36,6 +36,15 @@ class OpenNEEmbeddingBase:
     def get_vectors(self):
         return self.get_embeddings().vectors
 
+    @staticmethod
+    def valid_parameter_combinations(parameterSpace):
+        """
+        returns all possible combinations, if some are not valid / useful,
+        this method needs to be overwritten
+        """
+        all_combinations = product(*parameterSpace.values())
+        return [{k:v for k,v in zip(parameterSpace.keys(), combn)} for combn in all_combinations]
+
 class Node2VecEmbedding(OpenNEEmbeddingBase):
     def run(self):
         self.embeddings = node2vec.Node2vec(self.graph, **self.parameters)
