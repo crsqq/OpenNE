@@ -6,7 +6,7 @@ from OpenNE.src.libnrl.gcn import gcnAPI
 from itertools import product
 import networkx as nx
 import numpy as np
-
+import tensorflow as tf
 
 def nx_to_openne_graph(nxgraph, stringify_nodes=True):
     dg = nx.to_directed(nxgraph).copy()
@@ -53,6 +53,13 @@ class GraRepEmbedding(OpenNEEmbeddingBase):
     def run(self):
         self.embeddings = grarep.GraRep(self.graph, **self.parameters)
 
+    @staticmethod
+    def valid_parameter_combinations(parameterSpace):
+        all_combinations = OpenNEEmbeddingBase.valid_parameter_combinations(parameterSpace)
+        valid = [x for x in all_combinations if x['dim']%x['Kstep'] == 0 ]
+        return valid
+
 class LINEEmbedding(OpenNEEmbeddingBase):
     def run(self):
+        tf.reset_default_graph()
         self.embeddings = line.LINE(self.graph, **self.parameters)
