@@ -6,6 +6,7 @@ from OpenNE.src.libnrl.gcn import gcnAPI
 from itertools import product
 import networkx as nx
 import numpy as np
+import tensorflow as tf
 
 
 def nx_to_openne_graph(nxgraph, stringify_nodes=True):
@@ -65,4 +66,5 @@ class GraRepEmbedding(OpenNEEmbeddingBase):
 
 class LINEEmbedding(OpenNEEmbeddingBase):
     def run(self):
+        tf.reset_default_graph()
         self.embeddings = line.LINE(self.graph, **self.parameters)
