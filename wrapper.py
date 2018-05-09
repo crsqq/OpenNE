@@ -53,6 +53,16 @@ class GraRepEmbedding(OpenNEEmbeddingBase):
     def run(self):
         self.embeddings = grarep.GraRep(self.graph, **self.parameters)
 
+    @staticmethod
+    def valid_parameter_combinations(parameterSpace):
+        """
+        returns all possible combinations, if some are not valid / useful,
+        this method needs to be overwritten
+        """
+        all_combinations = product(*parameterSpace.values())
+        all_combinations = [{k:v for k,v in zip(parameterSpace.keys(), combn)} for combn in all_combinations]
+        return [x for x in all_combinations if x["dim"] % x["Kstep"] == 0]
+
 class LINEEmbedding(OpenNEEmbeddingBase):
     def run(self):
         self.embeddings = line.LINE(self.graph, **self.parameters)
