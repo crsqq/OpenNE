@@ -46,8 +46,15 @@ class OpenNEEmbeddingBase:
         return [{k:v for k,v in zip(parameterSpace.keys(), combn)} for combn in all_combinations]
 
 class Node2VecEmbedding(OpenNEEmbeddingBase):
+    """
+     {'dim': 2, 'num_paths': 80, 'p': 1, 'path_length': 10, 'q': 1}
+    """
     def run(self):
-        self.embeddings = node2vec.Node2vec(self.graph, **self.parameters)
+        self.embeddings = node2vec.Node2vec(self.graph, retrainable=True, **self.parameters)
+
+    def retrain(self, new_graph):
+        g = nx_to_openne_graph(new_graph)
+        self.embeddings.retrain(g)
 
 class GraRepEmbedding(OpenNEEmbeddingBase):
     def run(self):
@@ -68,8 +75,8 @@ class LINEEmbedding(OpenNEEmbeddingBase):
         tf.reset_default_graph()
         self.embeddings = line.LINE(self.graph, **self.parameters)
 
-        
-        
+
+
 from scipy.sparse.linalg.eigen.arpack import eigsh as largest_eigsh
 
 class SpectralClusteringEmbedding(OpenNEEmbeddingBase):
@@ -77,7 +84,7 @@ class SpectralClusteringEmbedding(OpenNEEmbeddingBase):
         self.graph = thisgraph
         self.embeddings = None
         self.parameters = parameters
-        
+
         nx.relabel_nodes(self.graph, {n:str(n) for n in self.graph.nodes}, copy=False)
     def run(self):
         L = nx.normalized_laplacian_matrix(self.graph)
@@ -85,8 +92,8 @@ class SpectralClusteringEmbedding(OpenNEEmbeddingBase):
         self.embeddings = {str(n):v for n,v in zip(self.graph.nodes, evectors)}
     def get_vectors(self):
         return self.get_embeddings()
-    
-    
+
+
 def _RandNE(graph, dim, q, beta):
     d = dim
     A = nx.to_scipy_sparse_matrix(graph)

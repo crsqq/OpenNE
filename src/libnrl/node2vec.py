@@ -6,8 +6,8 @@ from . import walker
 
 class Node2vec(object):
 
-    def __init__(self, graph, path_length, num_paths, dim, p=1.0, q=1.0, dw=False, **kwargs):
-        
+    def __init__(self, graph, path_length, num_paths, dim, p=1.0, q=1.0, dw=False, retrainable=False, **kwargs):
+
         kwargs["workers"] = kwargs.get("workers", 1)
         if dw:
             kwargs["hs"] = 1
@@ -15,13 +15,18 @@ class Node2vec(object):
             q = 1.0
 
         self.graph = graph
-        if dw:
-            self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
-        else:
-            self.walker = walker.Walker(graph, p=p, q=q, workers=kwargs["workers"])
-            #print("Preprocess transition probs...")
-            self.walker.preprocess_transition_probs()
-        sentences = self.walker.simulate_walks(num_walks=num_paths, walk_length=path_length)
+        self.dw = dw
+        self.p =p
+        self.q = q
+        self.kwargs = kwargs
+        self.retrainable = retrainable
+
+        self.path_length = path_length
+        self.num_paths = num_paths
+
+        self._init_walker()
+
+        sentences = self.walker.simulate_walks(num_walks=self.num_paths, walk_length=self.path_length)
         kwargs["sentences"] = sentences
         kwargs["min_count"] = kwargs.get("min_count", 0)
         kwargs["size"] = kwargs.get("size", dim)
@@ -30,10 +35,41 @@ class Node2vec(object):
         self.size = kwargs["size"]
         #print("Learning representation...")
         word2vec = Word2Vec(**kwargs)
-        self.vectors = {}
-        for word in graph.G.nodes():
-            self.vectors[word] = word2vec.wv[word]
-        del word2vec
+        self.vectors = self._extract_vectors(word2vec)
+
+        if not retrainable:
+            del word2vec
+        else:
+            self.word2vec = word2vec
+
+    def retrain(self, new_graph):
+        if not self.retrainable:
+            raise RuntimeError('model is not retrainable')
+
+        self.graph = new_graph
+        self._init_walker()
+
+        sentences = self.walker.simulate_walks(num_walks=self.num_paths, walk_length=self.path_length)
+        kwargs = self.kwargs
+        kwargs["sentences"] = sentences
+
+
+        #FIXME hard coded epochs
+        self.word2vec.train(sentences=sentences, total_examples=self.word2vec.corpus_count, epochs=5)
+        self.vectors = self._extract_vectors(self.word2vec)
+
+
+    def _extract_vectors(self, w2v):
+        return {n:w2v.wv[n] for n in self.graph.G.nodes()}
+
+    def _init_walker(self):
+        if self.dw:
+            self.walker = walker.BasicWalker(self.graph, workers=self.kwargs["workers"])
+        else:
+            self.walker = walker.Walker(self.graph, p=self.p, q=self.q, workers=self.kwargs["workers"])
+            #print("Preprocess transition probs...")
+            self.walker.preprocess_transition_probs()
+
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
@@ -41,5 +77,6 @@ class Node2vec(object):
         fout.write("{} {}\n".format(node_num, self.size))
         for node, vec in self.vectors.items():
             fout.write("{} {}\n".format(node,
-                                        ' '.join([str(x) for x in vec])))
-        fout.close()
+                ' '.join([str(x) for x in vec])))
+            fout.close()
+
