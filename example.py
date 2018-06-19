@@ -15,5 +15,5 @@ def nx_to_openne_graph(nxgraph):
 zachary = nx.karate_club_graph()
 zachary = nx.relabel_nodes(zachary, {n:str(n) for n in zachary.nodes})
 
-embeddings = node2vec.Node2vec(nx_to_openne_graph(zachary), 10, 80, 2).vectors
-print(embeddings)
+embeddings = node2vec.Node2vec(nx_to_openne_graph(zachary), 10, 80, 2)
+print(embeddings.vectors)

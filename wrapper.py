@@ -52,9 +52,9 @@ class Node2VecEmbedding(OpenNEEmbeddingBase):
     def run(self):
         self.embeddings = node2vec.Node2vec(self.graph, retrainable=True, **self.parameters)
 
-    def retrain(self, new_graph):
+    def retrain(self, new_graph, num_paths=80, epochs=5):
         g = nx_to_openne_graph(new_graph)
-        self.embeddings.retrain(g)
+        self.embeddings.retrain(g, num_paths=num_paths, epochs=epochs)
 
 class GraRepEmbedding(OpenNEEmbeddingBase):
     def run(self):

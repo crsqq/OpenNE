@@ -42,20 +42,18 @@ class Node2vec(object):
         else:
             self.word2vec = word2vec
 
-    def retrain(self, new_graph):
+    def retrain(self, new_graph, num_paths=80, epochs=5):
         if not self.retrainable:
             raise RuntimeError('model is not retrainable')
 
         self.graph = new_graph
         self._init_walker()
 
-        sentences = self.walker.simulate_walks(num_walks=self.num_paths, walk_length=self.path_length)
+        sentences = self.walker.simulate_walks(num_walks=num_paths, walk_length=self.path_length)
         kwargs = self.kwargs
         kwargs["sentences"] = sentences
 
-
-        #FIXME hard coded epochs
-        self.word2vec.train(sentences=sentences, total_examples=self.word2vec.corpus_count, epochs=5)
+        self.word2vec.train(sentences=sentences, total_examples=self.word2vec.corpus_count, epochs=epochs)
         self.vectors = self._extract_vectors(self.word2vec)
 
 
